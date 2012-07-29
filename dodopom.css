@@ -1,0 +1,25 @@
+body {
+  margin: 0px;
+}
+
+.yui3-thankscard {
+    margin-left: auto;
+    margin-right: auto;
+    display: block;
+    margin-top: 2em;
+    box-shadow: 3px 3px 15px 1px;
+    }
+
+#myCanvas {
+  margin-left: auto;
+  margin-right: auto;
+  border: none #AAAAAA 0px;
+  -webkit-box-shadow: 2px 2px 10px #11111f; /* Saf3-4, iOS 4.0.2 - 4.2, Android 2.3+ */
+  -moz-box-shadow: 2px 2px 10px #111111; /* FF3.5 - 3.6 */
+  box-shadow: 2px 2px 10px #111111; /* Opera 10.5, IE9, FF4+, Chrome 6+, iOS 5 */
+  padding: 4px 4px 4px 4px;
+
+}
+.hidden {
+display: none;
+}
