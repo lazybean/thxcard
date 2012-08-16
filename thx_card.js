@@ -625,7 +625,7 @@ YUI().use('base', 'widget', 'node', 'substitute', 'console' ,'event', 'event-mou
           name: 'test1',
           node: Y.one('#bg_img2'),
           coord: [{x:525, y:250, width:595, height: 600, angle:0.261},
-          {x:1251, y:213, width:595, height: 525, angle:0.174}]
+          {x:1255, y:217, width:515, height: 515, angle:0.174}]
         },
         {
           name: 'test2',
