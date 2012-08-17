@@ -651,7 +651,6 @@ YUI().use('base', 'widget', 'node', 'substitute', 'console' ,'event', 'event-mou
         ctx.lineTo(photoframe_width, photoframe_height);
         ctx.lineTo(0, photoframe_height);
         ctx.lineTo(0, 0);
-        ctx.stroke();
         ctx.restore();
         var isInPath = ctx.isPointInPath(this.x, this.y)
         Y.log('Point is in frame ' + index + ' : ' + isInPath); 
