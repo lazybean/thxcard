@@ -9,6 +9,7 @@
 // YUI.add("mywidget", function(Y) {
 YUI().use('base', 'widget', 'node', 'substitute', 'console' ,'event', 'event-mousewheel', 'array-extras', function(Y) {
   /* Any frequently used shortcuts, strings and constants */
+  "use strict";
   var Lang = Y.Lang,
   Widget = Y.Widget,
   Node = Y.Node;
@@ -44,6 +45,16 @@ YUI().use('base', 'widget', 'node', 'substitute', 'console' ,'event', 'event-mou
     */
     currentFrameImgs : {
       value: [0]
+    },
+
+    /**
+    * Keep trace of what frame are loading images
+    * A frame that is loading image will not change image.
+    *
+    * @property
+    */
+    areFramesLoading : {
+      value: []
     },
 
     //list of images ratio. default is 1
@@ -90,13 +101,13 @@ YUI().use('base', 'widget', 'node', 'substitute', 'console' ,'event', 'event-mou
       readOnly: true
     },
 
-//canvas width, initial value is max value
+    //canvas width, initial value is max value
     width : {
       //value : 1772,
       value: 1000,
       writeOnce: false
     },
-//canvas height, initial value is max value
+    //canvas height, initial value is max value
     height : {
       //value : 1181,
       value: 667,
@@ -182,10 +193,10 @@ YUI().use('base', 'widget', 'node', 'substitute', 'console' ,'event', 'event-mou
       winHeight  = body.get('winHeight'),
       initialWidth = this.get('width'),
       initialHeight = this.get('height');
-      
+
       winWidth = Math.min(winWidth, initialWidth);
       winHeight = Math.min(winHeight, initialHeight);
-      
+
       this._mynode = Node.create(Y.substitute(ThanksCard.MYNODE_TEMPLATE, {mynodeid: this.get("id") + "_mynode"})); 
       //this._mynode.setAttribute('width', this.get('width')+'px');
       //this._mynode.setAttribute('height', this.get('height')+'px');
@@ -327,19 +338,21 @@ YUI().use('base', 'widget', 'node', 'substitute', 'console' ,'event', 'event-mou
     */
     _drawScene : function (bgIndex, imgsIndex){
       Y.log('_drawScene: ' + bgIndex + ', ' + imgsIndex);
-      var img = this.get('listOfBGs')[bgIndex];
+      var img = this.get('listOfBGs')[bgIndex],
+      imgName = img.name,
+      ratio,
+      bgInfo;
 
-      var imgName = img.name;
-      img = img.node.getDOMNode(),
+      img = img.node.getDOMNode();
       ratio = this.computeRatio(img.width, img.height, this.get('width'), this.get('height'));
       this.set('bgRatio', ratio);
       this._drawWhiteBlank();
-      var bgInfo = this.get('listOfBGs')[bgIndex];
+      bgInfo = this.get('listOfBGs')[bgIndex];
 
       //for each frame, draw the corresponding current img
       Y.Array.each(bgInfo.coord, function(coord, frameNumber) {
-        var imgIndex = imgsIndex[frameNumber] || 0;
-        var img = this.get('listOfImgs')[frameNumber][imgIndex];
+        var imgIndex = imgsIndex[frameNumber] || 0,
+        img = this.get('listOfImgs')[frameNumber][imgIndex];
         this._drawImage(img, frameNumber);
       }, this);
       this._drawBG(img);
@@ -495,23 +508,78 @@ YUI().use('base', 'widget', 'node', 'substitute', 'console' ,'event', 'event-mou
 
     },
 
+    /**
+    * Incremante the selected frame image index.
+    * If the index become greater than the amount of image, we set it back to 0
+    *
+    * It does not draw any thing. But there is a change event listener on the index, that may draw the new image
+    *
+    *@method
+    *
+    *
+    */
     nextCurrentFrameImg : function() {
 
-      var selectedFrame = this.get('selectedFrame');
-      var currentFrameImgs =  this.get('currentFrameImgs'),
-      currentFrameImg = currentFrameImgs[selectedFrame];
-      if (Y.Lang.isUndefined(currentFrameImg)) {
-        currentFrameImg = 1;
-      } else {
-        currentFrameImg ++;
-      } 
-      if (currentFrameImg >= this.get('listOfImgs')[selectedFrame].length){
-        currentFrameImg = 0;
+      var selectedFrame = this.get('selectedFrame'),
+      currentFrameImgs =  this.get('currentFrameImgs'),
+      currentFrameImg = currentFrameImgs[selectedFrame],
+      areFramesLoading = this.get('areFramesLoading'),
+      img; 
+
+      //if the selected frame is still loading picture, we do not change
+      if (areFramesLoading[selectedFrame] !== true) {
+
+        //we increment the currentFrameImg index
+        if (Y.Lang.isUndefined(currentFrameImg)) {
+          currentFrameImg = 1;
+        } else {
+          currentFrameImg ++;
+        } 
+        if (currentFrameImg >= this.get('listOfImgs')[selectedFrame].length){
+          currentFrameImg = 0;
+        }
+        img = this.get('listOfImgs')[selectedFrame][currentFrameImg];
+
+        //we check if the next image to display in the frame is loaded
+        //if the widht of the image is 0, we consider the next image as not loaded
+        if ( img.node.get('width') > 0) {
+          currentFrameImgs[selectedFrame] = currentFrameImg;
+          this.set('currentFrameImgs', currentFrameImgs);
+          Y.log('New Img for frame ' + selectedFrame +' is ' + currentFrameImg);
+        } else {
+
+          var areFramesLoading = this.get('areFramesLoading'),
+          imgNode = img.node;
+          areFramesLoading[selectedFrame] = true;
+          //load the image, set the change when image is loaded
+          imgNode.setAttribute('src', imgNode.getAttribute('fakesrc'));
+          imgNode.on('load', this.setNextFrameOnImageLoaded, this, selectedFrame,currentFrameImg);
+
+        }
       }
-      currentFrameImgs[selectedFrame] = currentFrameImg;
-      this.set('currentFrameImgs', currentFrameImgs);
-      Y.log('New Img for frame ' + selectedFrame +' is ' + currentFrameImg);
     },
+
+    /**
+    * increment the image index on the selected frame. Put the loading attribute for this frame at false
+    * @method
+    * @param frame the concerned frame 
+    * @param newIndex the new index of the photo in that frame
+    */
+    setNextFrameOnImageLoaded: function(e, frame, newIndex) {
+
+      var areFramesLoading = this.get('areFramesLoading'),
+      currentFrameImgs =  this.get('currentFrameImgs');
+      areFramesLoading[frame] = false;
+      currentFrameImgs[frame] = newIndex;
+      this.set('areFramesLoading', areFramesLoading);
+      this.set('currentFrameImgs', currentFrameImgs);
+
+    },
+    /**
+    * Check if the image has its content already loaded.
+    *
+    * @method
+    */
 
     /*
     *switch between the frames 0 and 1
@@ -557,7 +625,7 @@ YUI().use('base', 'widget', 'node', 'substitute', 'console' ,'event', 'event-mou
       Y.log('Finding what element was clicked on x' + x + '/y' + y);
       var framesCoords = this.get('listOfBGs')[this.get('currentBG')].coord;
       var clickedFrameIndex = (Y.Array.map(framesCoords, isInFrame, {x: x, y: y, that:this})).indexOf(true);
-      
+
 
       function isInFrame(coord, index, a ) {
         var that = this.that,
@@ -599,10 +667,10 @@ YUI().use('base', 'widget', 'node', 'substitute', 'console' ,'event', 'event-mou
 
       var elClick = this.getElementClicked(x,y);
       if (elClick < 0) {
-       this.nextBG();
+        this.nextBG();
       } else {
-       this.set('selectedFrame', elClick);
-       this.nextCurrentFrameImg();
+        this.set('selectedFrame', elClick);
+        this.nextCurrentFrameImg();
       }
     }
 
@@ -610,7 +678,7 @@ YUI().use('base', 'widget', 'node', 'substitute', 'console' ,'event', 'event-mou
 
   Y.namespace("Thx").ThanksCard = ThanksCard;
 
-  // }, "3.2.0", {requires:["widget", "substitute"]});
+// }, "3.2.0", {requires:["widget", "substitute"]});
   // END WRAPPER
 
 
@@ -634,7 +702,6 @@ YUI().use('base', 'widget', 'node', 'substitute', 'console' ,'event', 'event-mou
           {x:1185, y:448, width:470, height: 475, angle:0}]
         }]
     });
-
 
     Y.log('Thx card inited\nset list of imgs...');
     var photoClasses = ['.primPhoto', '.secPhoto'];
@@ -661,7 +728,6 @@ YUI().use('base', 'widget', 'node', 'substitute', 'console' ,'event', 'event-mou
     Y.one('#container').on('click', thx.onClick, thx)
 
     Y.one('body').focus();
-
 
   });
 });
