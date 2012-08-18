@@ -6,8 +6,7 @@
 */
 
 // START WRAPPER: The YUI.add wrapper is added by the build system, when you use YUI Builder to build your component from the raw source in this file
-// YUI.add("mywidget", function(Y) {
-YUI().use('base', 'widget', 'node', 'substitute', 'console' ,'event', 'event-mousewheel', 'array-extras', function(Y) {
+YUI.add("thxcard", function(Y) {
   /* Any frequently used shortcuts, strings and constants */
   "use strict";
   var Lang = Y.Lang,
@@ -677,56 +676,5 @@ YUI().use('base', 'widget', 'node', 'substitute', 'console' ,'event', 'event-mou
 
   Y.namespace("Thx").ThanksCard = ThanksCard;
 
-// }, "3.2.0", {requires:["widget", "substitute"]});
-  // END WRAPPER
-
-
-  Y.on('domready', function(){
-    //we hide the 'waiting' element and show the thx_card container
-    Y.one('#waiting').addClass('hidden');
-    Y.one('#container').removeClass('hidden');
-    var thx = new ThanksCard({
-      srcNode: "#container",
-      listOfBGs :[
-        {
-          name: 'test1',
-          node: Y.one('#bg_img2'),
-          coord: [{x:525, y:250, width:595, height: 600, angle:0.261},
-          {x:1255, y:217, width:515, height: 515, angle:0.174}]
-        },
-        {
-          name: 'test2',
-          node: Y.one('#bg_img1'),
-          coord: [{x:210, y:305, width:320, height: 310, angle:0},
-          {x:1185, y:448, width:470, height: 475, angle:0}]
-        }]
-    });
-
-    Y.log('Thx card inited\nset list of imgs...');
-    var photoClasses = ['.primPhoto', '.secPhoto'];
-    thx.set('listOfImgs', photoClasses);
-    thx.render();
-    Y.one('body').on('key', function (e) {
-      thx.nextFrame();
-    }, 'down:enter');
-
-    Y.one('body').on('key', function (e) {
-      e.preventDefault();
-      thx.nextCurrentFrameImg();
-    }, 'down:tab');
-
-    Y.one('body').on('key', function (e) { 
-      thx.nextBG();
-      e.stopPropagation();
-    }, 'down:+shift');
-    Y.one('body').on('mousewheel', function (e) { 
-      Y.log('event mousewheel'); 
-      thx.selectedFrameZoomHandler(e);
-    });
-
-    Y.one('#container').on('click', thx.onClick, thx)
-
-    Y.one('body').focus();
-
-  });
-});
+}, "1.0.0", {requires:["base-base", "widget", "substitute", "array-extras" ]});
+// END WRAPPER
