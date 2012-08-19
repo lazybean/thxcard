@@ -20,24 +20,16 @@ YUI.add("thxcard-howto", function(Y) {
         height: 0,
         top: '100px',
 
-        width: {
-          delay: 1,
-          duration: 0.5,
-          easing: 'ease-in',
-          value: 0
-        },
-
-        left: {
-          delay: 1,
-          duration: 0.5,
-          easing: 'ease-in',
-          value: '150px'
-        },
-
         opacity: {
-          delay: 1.5,
-          duration: 0.25,
+          delay: 0.0,
+          duration: 1,
           value: 0
+        },
+
+        color: {
+          delay: 0.0,
+          duration: 1.0,
+          value: 'rgba(0,0,0,0)'
         }
       }, function() {
         that.hide();
