@@ -358,27 +358,6 @@ YUI.add("thxcard", function(Y) {
 
     },
 
-
-    /**
-    *Draw the whole canvas with bg, primary and secondary img
-    * whose index is passed as arg
-    */
-    _drawSceneOld : function (bgIndex, primImgIndex, secImgIndex){
-      Y.log('_drawScene: ' + bgIndex + ', ' + primImgIndex + ', ' + secImgIndex);
-      var img = this.get('listOfBGs')[bgIndex];
-
-      var imgName = img.name;
-      img = img.node.getDOMNode(),
-      ratio = this.computeRatio(img.width, img.height, this.get('width'), this.get('height'));
-      this.set('bgRatio', ratio);
-
-      this._drawWhiteBlank();
-      this._drawImage(this.get('listOfPrimImgs')[primImgIndex], 0);
-      this._drawImage(this.get('listOfSecImgs')[secImgIndex], 1);
-      this._drawBG(img);
-
-    },
-
     /*
     *erase the whole canvas
     */
@@ -398,33 +377,25 @@ YUI.add("thxcard", function(Y) {
       ratio = this.get('bgRatio'),
       bgIndex = this.get('currentBG'),
       bg=this.get('listOfBGs')[bgIndex],
-      frameNumber = frameNumber || 0;
-
-      var transX = bg.coord[frameNumber].x,
+      frameNumber = frameNumber || 0,
+      transX = bg.coord[frameNumber].x,
       transY = bg.coord[frameNumber].y,
       photoframe_width = bg.coord[frameNumber].width,
       photoframe_height = bg.coord[frameNumber].height,
       img = img.node.getDOMNode(), 
-      angle = bg.coord[frameNumber].angle;
+      angle = bg.coord[frameNumber].angle,
+      framesRatio, frameR;
       //setup the context, 
       //scale according to the bg scale
       //translate to the photo frame position
       //and rotate like the photo frame
       //finally we clip to the size of thphoto frame
       ctx.save();
-      ctx.scale(ratio, ratio);
-      ctx.translate(transX, transY);
-      ctx.rotate(angle);
-
-      ctx.beginPath();
-      ctx.lineTo(photoframe_width, 0);
-      ctx.lineTo(photoframe_width, photoframe_height);
-      ctx.lineTo(0, photoframe_height);
-      ctx.lineTo(0, 0);
+      this.createFramePath(ctx, ratio, transX, transY, angle, photoframe_width, photoframe_height);
       ctx.clip();
 
       ratio = this.computeRatio(img.width, img.height, photoframe_width, photoframe_height);
-      var framesRatio = this.get('imgsRatio'),
+      framesRatio = this.get('imgsRatio');
       frameR = framesRatio[frameNumber];
       if (Y.Lang.isUndefined(frameR)){
         frameR = 1;
@@ -432,49 +403,6 @@ YUI.add("thxcard", function(Y) {
         this.set('imgsRatio', framesRatio);
       }
       ratio = ratio * frameR;
-      ctx.scale(ratio, ratio);
-      ctx.drawImage(img, 0, 0);
-      ctx.restore(); 
-    },
-    /**
-    *draw an image, at the position and angle 
-    * specified by the BG information
-    */
-    _drawImageOld : function (img, frameNumber) {
-      var ctx = this.get('ctx'),
-      ratio = this.get('bgRatio'),
-      bgIndex = this.get('currentBG'),
-      bg=this.get('listOfBGs')[bgIndex],
-      frameNumber = frameNumber || 0;
-
-      var frameName = ['prim', 'sec'][frameNumber],
-      coord = frameName + 'Coord', 
-      ratioName = frameName + 'ImgRatio',
-      transX = bg[coord].x,
-      transY = bg[coord].y,
-      photoframe_width = bg[coord].width,
-      photoframe_height = bg[coord].height,
-      img = img.node.getDOMNode(), 
-      angle = bg[coord].angle;
-      //setup the context, 
-      //scale according to the bg scale
-      //translate to the photo frame position
-      //and rotate like the photo frame
-      //finally we clip to the size of thphoto frame
-      ctx.save();
-      ctx.scale(ratio, ratio);
-      ctx.translate(transX, transY);
-      ctx.rotate(angle);
-
-      ctx.beginPath();
-      ctx.lineTo(photoframe_width, 0);
-      ctx.lineTo(photoframe_width, photoframe_height);
-      ctx.lineTo(0, photoframe_height);
-      ctx.lineTo(0, 0);
-      ctx.clip();
-
-      ratio = this.computeRatio(img.width, img.height, photoframe_width, photoframe_height);
-      ratio = ratio * this.get(ratioName);
       ctx.scale(ratio, ratio);
       ctx.drawImage(img, 0, 0);
       ctx.restore(); 
@@ -492,6 +420,32 @@ YUI.add("thxcard", function(Y) {
         ratio = (xRatio < yRatio)? xRatio : yRatio; 
       } 
       return ratio;
+
+    },
+
+    /**
+    * Create the path corresponding to a frame.
+    * You HAVE to take care of save the context before calling this method,
+    * and restoring it after.
+    *
+    * @method createFramePath
+    *
+    */
+    createFramePath: function (ctx, ratio, transX, transY, angle, width, height) {
+
+      //setup the context, 
+      //scale according to the bg scale
+      //translate to the photo frame position
+      //and rotate like the photo frame
+      ctx.scale(ratio, ratio);
+      ctx.translate(transX, transY);
+      ctx.rotate(angle);
+
+      ctx.beginPath();
+      ctx.lineTo(width, 0);
+      ctx.lineTo(width, height);
+      ctx.lineTo(0, height);
+      ctx.lineTo(0, 0);
 
     },
 
@@ -622,48 +576,51 @@ YUI.add("thxcard", function(Y) {
     */
     getElementClicked: function(x, y) {
       Y.log('Finding what element was clicked on x' + x + '/y' + y);
-      var framesCoords = this.get('listOfBGs')[this.get('currentBG')].coord;
-      var clickedFrameIndex = (Y.Array.map(framesCoords, isInFrame, {x: x, y: y, that:this})).indexOf(true);
-
-
-      function isInFrame(coord, index, a ) {
-        var that = this.that,
-        ctx = that.get('ctx'),
-        ratio = that.get('bgRatio'),
-        transX = coord.x,
-        transY = coord.y,
-        photoframe_width = coord.width,
-        photoframe_height = coord.height,
-        angle = coord.angle;
-        //setup the context, 
-        //scale according to the bg scale
-        //translate to the photo frame position
-        //and rotate like the photo frame
-        //finally we clip to the size of thphoto frame
-        ctx.save();
-        ctx.scale(ratio, ratio);
-        ctx.translate(transX, transY);
-        ctx.rotate(angle);
-
-        ctx.beginPath();
-        ctx.lineTo(photoframe_width, 0);
-        ctx.lineTo(photoframe_width, photoframe_height);
-        ctx.lineTo(0, photoframe_height);
-        ctx.lineTo(0, 0);
-        ctx.restore();
-        var isInPath = ctx.isPointInPath(this.x, this.y)
-        Y.log('Point is in frame ' + index + ' : ' + isInPath); 
-        return isInPath;
-      }
+      var framesCoords = this.get('listOfBGs')[this.get('currentBG')].coord,
+      clickedFrameIndex = [];
+      clickedFrameIndex = (Y.Array.map(framesCoords, this.isInFrame, {x: x, y: y, ctx: this.get('ctx'), ratio: this.get('bgRatio'), createFramePath: this.createFramePath })).indexOf(true);
       return clickedFrameIndex;
+    },
+
+
+    /**
+    * Attention this method is called with another context in getElementClicked
+    * In order to avoid strict violation
+    * the 'this' inside the function should have the following properties
+    * {
+    *  x: x coordinate of the point teste
+    *  y: y coordinate of the point teste
+    *
+    * ctx: the canvas context
+    * ratio: the bgRatio
+    * createFramePath:  this.createFramePath
+    * }
+    * @method isInFrame
+    *
+    */
+    isInFrame : function (coord, index, a ) {
+      var ctx = this.ctx,
+      ratio = this.ratio,
+      transX = coord.x,
+      transY = coord.y,
+      photoframe_width = coord.width,
+      photoframe_height = coord.height,
+      angle = coord.angle,
+      isInPath = false;
+      ctx.save();
+      this.createFramePath(ctx, ratio, transX, transY, angle, photoframe_width, photoframe_height);
+      ctx.restore();
+      isInPath = ctx.isPointInPath(this.x, this.y);
+      Y.log('Point is in frame ' + index + ' : ' + isInPath); 
+      return isInPath;
     },
 
     onClick: function(e) {
       var container = this.get('srcNode'),
       x = e.pageX - container.getX(),
-      y = e.pageY - container.getY();
+      y = e.pageY - container.getY(),
+      elClick = this.getElementClicked(x,y);
 
-      var elClick = this.getElementClicked(x,y);
       if (elClick < 0) {
         this.nextBG();
       } else {
