@@ -442,10 +442,12 @@ YUI.add("thxcard", function(Y) {
       ctx.rotate(angle);
 
       ctx.beginPath();
+      ctx.moveTo(0, 0);
       ctx.lineTo(width, 0);
       ctx.lineTo(width, height);
       ctx.lineTo(0, height);
       ctx.lineTo(0, 0);
+      ctx.closePath();
 
     },
 
