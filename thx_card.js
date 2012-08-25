@@ -225,6 +225,8 @@ YUI.add("thxcard", function(Y) {
       this.after("currentBGChange", this._afterCurrentBGChange);
       this.after("currentFrameImgsChange", this._afterCurrentFrameImgsChange);
       this.after("imgsRatioChange", this._afterImgsRatioChange);
+      
+      this.get('contentBox').on('click', this.onClick, this);
     },
 
     syncUI : function() {
@@ -620,8 +622,21 @@ YUI.add("thxcard", function(Y) {
     onClick: function(e) {
       var container = this.get('srcNode'),
       x = e.pageX - container.getX(),
-      y = e.pageY - container.getY(),
-      elClick = this.getElementClicked(x,y);
+      y = e.pageY - container.getY();
+      this.nextImageForElementAtPosition(x, y);
+    },
+
+    /**
+     * Change the image of the element at position x y to the next image
+     *
+     * @method nextImageForElementAtPosition
+     * @param {number} x position
+     * @param {number} y position
+     */
+    nextImageForElementAtPosition: function (x, y) {
+
+      //now what element is at position x y
+      var elClick = this.getElementClicked(x,y);
 
       if (elClick < 0) {
         this.nextBG();

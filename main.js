@@ -51,7 +51,7 @@ YUI({
         thxHowto.finish(function () {
           thx.render();
           //add interactivity to the thx card with event handling
-          Y.one('#container').on('click', thx.onClick, thx);
+          //Y.one('#container').on('click', thx.onClick, thx);
         });     
       });
   });
