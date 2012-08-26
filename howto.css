@@ -25,10 +25,10 @@
 }
 
 .yui3-thxcard-howto-content .background.clicked {
-background-image: linear-gradient(top left, blue, rgba(255,0,0,0));
-background-image: -webkit-linear-gradient(top left, blue, rgba(255,0,0,0));
-background-image: -moz-linear-gradient(top left, blue, rgba(255,0,0,0));
-background-image: -o-linear-gradient(top left, blue, rgba(255,0,0,0));
+background-image: linear-gradient(top left, #9191FF, rgba(186,255,230,0));
+background-image: -webkit-linear-gradient(top left, #9191FF, rgba(186,255,230,0));
+background-image: -moz-linear-gradient(top left, #9191FF, rgba(186,255,230,0));
+background-image: -o-linear-gradient(top left, #9191FF, rgba(186,255,230,0));
 }
 
 .yui3-thxcard-howto-content .frame:first-child {
@@ -46,8 +46,8 @@ background-image: -o-linear-gradient(top left, blue, rgba(255,0,0,0));
 }
 
 .yui3-thxcard-howto-content .frame.clicked {
-background-image: linear-gradient(bottom right, blue, rgba(255,0,0,0));
-background-image: -webkit-linear-gradient(bottom right, blue, rgba(255,0,0,0));
-background-image: -moz-linear-gradient(bottom right, blue, rgba(255,0,0,0));
-background-image: -o-linear-gradient(bottom right, blue, rgba(255,0,0,0));
+background-image: linear-gradient(bottom right, #9191FF, rgba(186,255,230,0));
+background-image: -webkit-linear-gradient(bottom right, #9191FF, rgba(186,255,230,0));
+background-image: -moz-linear-gradient(bottom right, #9191FF, rgba(186,255,230,0));
+background-image: -o-linear-gradient(bottom right, #9191FF, rgba(186,255,230,0));
 }
