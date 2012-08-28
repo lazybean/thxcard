@@ -1,0 +1,53 @@
+.yui3-thxcard-howto {
+  display: block;
+  margin: auto;
+  width: 800px;
+  height: 600px;
+}
+
+.yui3-thxcard-howto-content {
+  text-align: center;
+  font-family: 'Tangerine', serif;
+  font-size: x-large;
+  -webkit-box-shadow: 2px 2px 10px #11111f; /* Saf3-4, iOS 4.0.2 - 4.2, Android 2.3+ */
+  -moz-box-shadow: 2px 2px 10px #111111; /* FF3.5 - 3.6 */
+  -o-box-shadow: 2px 2px 10px #111111; /* FF3.5 - 3.6 */
+  box-shadow: 2px 2px 10px #111111; /* Opera 10.5, IE9, FF4+, Chrome 6+, iOS 5 */
+  height:100%;
+  width:100%;
+}
+
+.yui3-thxcard-howto-content .background {
+  width: 100%;
+  height: 100%;
+  border: 1px black solid;
+  background-color: white;
+}
+
+.yui3-thxcard-howto-content .background.clicked {
+background-image: linear-gradient(top left, #9191FF, rgba(186,255,230,0));
+background-image: -webkit-linear-gradient(top left, #9191FF, rgba(186,255,230,0));
+background-image: -moz-linear-gradient(top left, #9191FF, rgba(186,255,230,0));
+background-image: -o-linear-gradient(top left, #9191FF, rgba(186,255,230,0));
+}
+
+.yui3-thxcard-howto-content .frame:first-child {
+  width: 50%;
+  height: 40%;
+  position: relative;
+  left: 40%;
+  top: 10%;
+  border: 1px black solid;
+  background-color: white;
+  -webkit-box-shadow: 2px 2px 10px #11511f; /* Saf3-4, iOS 4.0.2 - 4.2, Android 2.3+ */
+  -moz-box-shadow: 2px 2px 10px #11511f; /* FF3.5 - 3.6 */
+  -o-box-shadow: 2px 2px 10px #11511f; /* FF3.5 - 3.6 */
+  box-shadow: 2px 2px 10px #11511f; /* Opera 10.5, IE9, FF4+, Chrome 6+, iOS 5 */
+}
+
+.yui3-thxcard-howto-content .frame.clicked {
+background-image: linear-gradient(bottom right, #9191FF, rgba(186,255,230,0));
+background-image: -webkit-linear-gradient(bottom right, #9191FF, rgba(186,255,230,0));
+background-image: -moz-linear-gradient(bottom right, #9191FF, rgba(186,255,230,0));
+background-image: -o-linear-gradient(bottom right, #9191FF, rgba(186,255,230,0));
+}

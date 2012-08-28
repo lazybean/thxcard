@@ -6,9 +6,9 @@
 */
 
 // START WRAPPER: The YUI.add wrapper is added by the build system, when you use YUI Builder to build your component from the raw source in this file
-// YUI.add("mywidget", function(Y) {
-YUI().use('base', 'widget', 'node', 'substitute', 'console' ,'event', 'event-mousewheel', 'array-extras', function(Y) {
+YUI.add("thxcard", function(Y) {
   /* Any frequently used shortcuts, strings and constants */
+  "use strict";
   var Lang = Y.Lang,
   Widget = Y.Widget,
   Node = Y.Node;
@@ -44,6 +44,16 @@ YUI().use('base', 'widget', 'node', 'substitute', 'console' ,'event', 'event-mou
     */
     currentFrameImgs : {
       value: [0]
+    },
+
+    /**
+    * Keep trace of what frame are loading images
+    * A frame that is loading image will not change image.
+    *
+    * @property
+    */
+    areFramesLoading : {
+      value: []
     },
 
     //list of images ratio. default is 1
@@ -90,13 +100,13 @@ YUI().use('base', 'widget', 'node', 'substitute', 'console' ,'event', 'event-mou
       readOnly: true
     },
 
-//canvas width, initial value is max value
+    //canvas width, initial value is max value
     width : {
       //value : 1772,
       value: 1000,
       writeOnce: false
     },
-//canvas height, initial value is max value
+    //canvas height, initial value is max value
     height : {
       //value : 1181,
       value: 667,
@@ -182,10 +192,10 @@ YUI().use('base', 'widget', 'node', 'substitute', 'console' ,'event', 'event-mou
       winHeight  = body.get('winHeight'),
       initialWidth = this.get('width'),
       initialHeight = this.get('height');
-      
+
       winWidth = Math.min(winWidth, initialWidth);
       winHeight = Math.min(winHeight, initialHeight);
-      
+
       this._mynode = Node.create(Y.substitute(ThanksCard.MYNODE_TEMPLATE, {mynodeid: this.get("id") + "_mynode"})); 
       //this._mynode.setAttribute('width', this.get('width')+'px');
       //this._mynode.setAttribute('height', this.get('height')+'px');
@@ -215,6 +225,8 @@ YUI().use('base', 'widget', 'node', 'substitute', 'console' ,'event', 'event-mou
       this.after("currentBGChange", this._afterCurrentBGChange);
       this.after("currentFrameImgsChange", this._afterCurrentFrameImgsChange);
       this.after("imgsRatioChange", this._afterImgsRatioChange);
+      
+      this.get('contentBox').on('click', this.onClick, this);
     },
 
     syncUI : function() {
@@ -327,42 +339,23 @@ YUI().use('base', 'widget', 'node', 'substitute', 'console' ,'event', 'event-mou
     */
     _drawScene : function (bgIndex, imgsIndex){
       Y.log('_drawScene: ' + bgIndex + ', ' + imgsIndex);
-      var img = this.get('listOfBGs')[bgIndex];
+      var img = this.get('listOfBGs')[bgIndex],
+      imgName = img.name,
+      ratio,
+      bgInfo;
 
-      var imgName = img.name;
-      img = img.node.getDOMNode(),
+      img = img.node.getDOMNode();
       ratio = this.computeRatio(img.width, img.height, this.get('width'), this.get('height'));
       this.set('bgRatio', ratio);
       this._drawWhiteBlank();
-      var bgInfo = this.get('listOfBGs')[bgIndex];
+      bgInfo = this.get('listOfBGs')[bgIndex];
 
       //for each frame, draw the corresponding current img
       Y.Array.each(bgInfo.coord, function(coord, frameNumber) {
-        var imgIndex = imgsIndex[frameNumber] || 0;
-        var img = this.get('listOfImgs')[frameNumber][imgIndex];
+        var imgIndex = imgsIndex[frameNumber] || 0,
+        img = this.get('listOfImgs')[frameNumber][imgIndex];
         this._drawImage(img, frameNumber);
       }, this);
-      this._drawBG(img);
-
-    },
-
-
-    /**
-    *Draw the whole canvas with bg, primary and secondary img
-    * whose index is passed as arg
-    */
-    _drawSceneOld : function (bgIndex, primImgIndex, secImgIndex){
-      Y.log('_drawScene: ' + bgIndex + ', ' + primImgIndex + ', ' + secImgIndex);
-      var img = this.get('listOfBGs')[bgIndex];
-
-      var imgName = img.name;
-      img = img.node.getDOMNode(),
-      ratio = this.computeRatio(img.width, img.height, this.get('width'), this.get('height'));
-      this.set('bgRatio', ratio);
-
-      this._drawWhiteBlank();
-      this._drawImage(this.get('listOfPrimImgs')[primImgIndex], 0);
-      this._drawImage(this.get('listOfSecImgs')[secImgIndex], 1);
       this._drawBG(img);
 
     },
@@ -386,33 +379,25 @@ YUI().use('base', 'widget', 'node', 'substitute', 'console' ,'event', 'event-mou
       ratio = this.get('bgRatio'),
       bgIndex = this.get('currentBG'),
       bg=this.get('listOfBGs')[bgIndex],
-      frameNumber = frameNumber || 0;
-
-      var transX = bg.coord[frameNumber].x,
+      frameNumber = frameNumber || 0,
+      transX = bg.coord[frameNumber].x,
       transY = bg.coord[frameNumber].y,
       photoframe_width = bg.coord[frameNumber].width,
       photoframe_height = bg.coord[frameNumber].height,
       img = img.node.getDOMNode(), 
-      angle = bg.coord[frameNumber].angle;
+      angle = bg.coord[frameNumber].angle,
+      framesRatio, frameR;
       //setup the context, 
       //scale according to the bg scale
       //translate to the photo frame position
       //and rotate like the photo frame
       //finally we clip to the size of thphoto frame
       ctx.save();
-      ctx.scale(ratio, ratio);
-      ctx.translate(transX, transY);
-      ctx.rotate(angle);
-
-      ctx.beginPath();
-      ctx.lineTo(photoframe_width, 0);
-      ctx.lineTo(photoframe_width, photoframe_height);
-      ctx.lineTo(0, photoframe_height);
-      ctx.lineTo(0, 0);
+      this.createFramePath(ctx, ratio, transX, transY, angle, photoframe_width, photoframe_height);
       ctx.clip();
 
       ratio = this.computeRatio(img.width, img.height, photoframe_width, photoframe_height);
-      var framesRatio = this.get('imgsRatio'),
+      framesRatio = this.get('imgsRatio');
       frameR = framesRatio[frameNumber];
       if (Y.Lang.isUndefined(frameR)){
         frameR = 1;
@@ -420,49 +405,6 @@ YUI().use('base', 'widget', 'node', 'substitute', 'console' ,'event', 'event-mou
         this.set('imgsRatio', framesRatio);
       }
       ratio = ratio * frameR;
-      ctx.scale(ratio, ratio);
-      ctx.drawImage(img, 0, 0);
-      ctx.restore(); 
-    },
-    /**
-    *draw an image, at the position and angle 
-    * specified by the BG information
-    */
-    _drawImageOld : function (img, frameNumber) {
-      var ctx = this.get('ctx'),
-      ratio = this.get('bgRatio'),
-      bgIndex = this.get('currentBG'),
-      bg=this.get('listOfBGs')[bgIndex],
-      frameNumber = frameNumber || 0;
-
-      var frameName = ['prim', 'sec'][frameNumber],
-      coord = frameName + 'Coord', 
-      ratioName = frameName + 'ImgRatio',
-      transX = bg[coord].x,
-      transY = bg[coord].y,
-      photoframe_width = bg[coord].width,
-      photoframe_height = bg[coord].height,
-      img = img.node.getDOMNode(), 
-      angle = bg[coord].angle;
-      //setup the context, 
-      //scale according to the bg scale
-      //translate to the photo frame position
-      //and rotate like the photo frame
-      //finally we clip to the size of thphoto frame
-      ctx.save();
-      ctx.scale(ratio, ratio);
-      ctx.translate(transX, transY);
-      ctx.rotate(angle);
-
-      ctx.beginPath();
-      ctx.lineTo(photoframe_width, 0);
-      ctx.lineTo(photoframe_width, photoframe_height);
-      ctx.lineTo(0, photoframe_height);
-      ctx.lineTo(0, 0);
-      ctx.clip();
-
-      ratio = this.computeRatio(img.width, img.height, photoframe_width, photoframe_height);
-      ratio = ratio * this.get(ratioName);
       ctx.scale(ratio, ratio);
       ctx.drawImage(img, 0, 0);
       ctx.restore(); 
@@ -483,6 +425,34 @@ YUI().use('base', 'widget', 'node', 'substitute', 'console' ,'event', 'event-mou
 
     },
 
+    /**
+    * Create the path corresponding to a frame.
+    * You HAVE to take care of save the context before calling this method,
+    * and restoring it after.
+    *
+    * @method createFramePath
+    *
+    */
+    createFramePath: function (ctx, ratio, transX, transY, angle, width, height) {
+
+      //setup the context, 
+      //scale according to the bg scale
+      //translate to the photo frame position
+      //and rotate like the photo frame
+      ctx.scale(ratio, ratio);
+      ctx.translate(transX, transY);
+      ctx.rotate(angle);
+
+      ctx.beginPath();
+      ctx.moveTo(0, 0);
+      ctx.lineTo(width, 0);
+      ctx.lineTo(width, height);
+      ctx.lineTo(0, height);
+      ctx.lineTo(0, 0);
+      ctx.closePath();
+
+    },
+
     nextBG : function() {
 
       var nextBG = this.get('currentBG') + 1;
@@ -495,23 +465,78 @@ YUI().use('base', 'widget', 'node', 'substitute', 'console' ,'event', 'event-mou
 
     },
 
+    /**
+    * Incremante the selected frame image index.
+    * If the index become greater than the amount of image, we set it back to 0
+    *
+    * It does not draw any thing. But there is a change event listener on the index, that may draw the new image
+    *
+    *@method
+    *
+    *
+    */
     nextCurrentFrameImg : function() {
 
-      var selectedFrame = this.get('selectedFrame');
-      var currentFrameImgs =  this.get('currentFrameImgs'),
-      currentFrameImg = currentFrameImgs[selectedFrame];
-      if (Y.Lang.isUndefined(currentFrameImg)) {
-        currentFrameImg = 1;
-      } else {
-        currentFrameImg ++;
-      } 
-      if (currentFrameImg >= this.get('listOfImgs')[selectedFrame].length){
-        currentFrameImg = 0;
+      var selectedFrame = this.get('selectedFrame'),
+      currentFrameImgs =  this.get('currentFrameImgs'),
+      currentFrameImg = currentFrameImgs[selectedFrame],
+      areFramesLoading = this.get('areFramesLoading'),
+      img; 
+
+      //if the selected frame is still loading picture, we do not change
+      if (areFramesLoading[selectedFrame] !== true) {
+
+        //we increment the currentFrameImg index
+        if (Y.Lang.isUndefined(currentFrameImg)) {
+          currentFrameImg = 1;
+        } else {
+          currentFrameImg ++;
+        } 
+        if (currentFrameImg >= this.get('listOfImgs')[selectedFrame].length){
+          currentFrameImg = 0;
+        }
+        img = this.get('listOfImgs')[selectedFrame][currentFrameImg];
+
+        //we check if the next image to display in the frame is loaded
+        //if the widht of the image is 0, we consider the next image as not loaded
+        if ( img.node.get('width') > 0) {
+          currentFrameImgs[selectedFrame] = currentFrameImg;
+          this.set('currentFrameImgs', currentFrameImgs);
+          Y.log('New Img for frame ' + selectedFrame +' is ' + currentFrameImg);
+        } else {
+
+          var areFramesLoading = this.get('areFramesLoading'),
+          imgNode = img.node;
+          areFramesLoading[selectedFrame] = true;
+          //load the image, set the change when image is loaded
+          imgNode.setAttribute('src', imgNode.getAttribute('fakesrc'));
+          imgNode.on('load', this.setNextFrameOnImageLoaded, this, selectedFrame,currentFrameImg);
+
+        }
       }
-      currentFrameImgs[selectedFrame] = currentFrameImg;
-      this.set('currentFrameImgs', currentFrameImgs);
-      Y.log('New Img for frame ' + selectedFrame +' is ' + currentFrameImg);
     },
+
+    /**
+    * increment the image index on the selected frame. Put the loading attribute for this frame at false
+    * @method
+    * @param frame the concerned frame 
+    * @param newIndex the new index of the photo in that frame
+    */
+    setNextFrameOnImageLoaded: function(e, frame, newIndex) {
+
+      var areFramesLoading = this.get('areFramesLoading'),
+      currentFrameImgs =  this.get('currentFrameImgs');
+      areFramesLoading[frame] = false;
+      currentFrameImgs[frame] = newIndex;
+      this.set('areFramesLoading', areFramesLoading);
+      this.set('currentFrameImgs', currentFrameImgs);
+
+    },
+    /**
+    * Check if the image has its content already loaded.
+    *
+    * @method
+    */
 
     /*
     *switch between the frames 0 and 1
@@ -555,54 +580,69 @@ YUI().use('base', 'widget', 'node', 'substitute', 'console' ,'event', 'event-mou
     */
     getElementClicked: function(x, y) {
       Y.log('Finding what element was clicked on x' + x + '/y' + y);
-      var framesCoords = this.get('listOfBGs')[this.get('currentBG')].coord;
-      var clickedFrameIndex = (Y.Array.map(framesCoords, isInFrame, {x: x, y: y, that:this})).indexOf(true);
-      
-
-      function isInFrame(coord, index, a ) {
-        var that = this.that,
-        ctx = that.get('ctx'),
-        ratio = that.get('bgRatio'),
-        transX = coord.x,
-        transY = coord.y,
-        photoframe_width = coord.width,
-        photoframe_height = coord.height,
-        angle = coord.angle;
-        //setup the context, 
-        //scale according to the bg scale
-        //translate to the photo frame position
-        //and rotate like the photo frame
-        //finally we clip to the size of thphoto frame
-        ctx.save();
-        ctx.scale(ratio, ratio);
-        ctx.translate(transX, transY);
-        ctx.rotate(angle);
-
-        ctx.beginPath();
-        ctx.lineTo(photoframe_width, 0);
-        ctx.lineTo(photoframe_width, photoframe_height);
-        ctx.lineTo(0, photoframe_height);
-        ctx.lineTo(0, 0);
-        ctx.stroke();
-        ctx.restore();
-        var isInPath = ctx.isPointInPath(this.x, this.y)
-        Y.log('Point is in frame ' + index + ' : ' + isInPath); 
-        return isInPath;
-      }
+      var framesCoords = this.get('listOfBGs')[this.get('currentBG')].coord,
+      clickedFrameIndex = [];
+      clickedFrameIndex = (Y.Array.map(framesCoords, this.isInFrame, {x: x, y: y, ctx: this.get('ctx'), ratio: this.get('bgRatio'), createFramePath: this.createFramePath })).indexOf(true);
       return clickedFrameIndex;
+    },
+
+
+    /**
+    * Attention this method is called with another context in getElementClicked
+    * In order to avoid strict violation
+    * the 'this' inside the function should have the following properties
+    * {
+    *  x: x coordinate of the point teste
+    *  y: y coordinate of the point teste
+    *
+    * ctx: the canvas context
+    * ratio: the bgRatio
+    * createFramePath:  this.createFramePath
+    * }
+    * @method isInFrame
+    *
+    */
+    isInFrame : function (coord, index, a ) {
+      var ctx = this.ctx,
+      ratio = this.ratio,
+      transX = coord.x,
+      transY = coord.y,
+      photoframe_width = coord.width,
+      photoframe_height = coord.height,
+      angle = coord.angle,
+      isInPath = false;
+      ctx.save();
+      this.createFramePath(ctx, ratio, transX, transY, angle, photoframe_width, photoframe_height);
+      ctx.restore();
+      isInPath = ctx.isPointInPath(this.x, this.y);
+      Y.log('Point is in frame ' + index + ' : ' + isInPath); 
+      return isInPath;
     },
 
     onClick: function(e) {
       var container = this.get('srcNode'),
       x = e.pageX - container.getX(),
       y = e.pageY - container.getY();
+      this.nextImageForElementAtPosition(x, y);
+    },
 
+    /**
+     * Change the image of the element at position x y to the next image
+     *
+     * @method nextImageForElementAtPosition
+     * @param {number} x position
+     * @param {number} y position
+     */
+    nextImageForElementAtPosition: function (x, y) {
+
+      //now what element is at position x y
       var elClick = this.getElementClicked(x,y);
+
       if (elClick < 0) {
-       this.nextBG();
+        this.nextBG();
       } else {
-       this.set('selectedFrame', elClick);
-       this.nextCurrentFrameImg();
+        this.set('selectedFrame', elClick);
+        this.nextCurrentFrameImg();
       }
     }
 
@@ -610,58 +650,5 @@ YUI().use('base', 'widget', 'node', 'substitute', 'console' ,'event', 'event-mou
 
   Y.namespace("Thx").ThanksCard = ThanksCard;
 
-  // }, "3.2.0", {requires:["widget", "substitute"]});
-  // END WRAPPER
-
-
-  Y.on('domready', function(){
-    //we hide the 'waiting' element and show the thx_card container
-    Y.one('#waiting').addClass('hidden');
-    Y.one('#container').removeClass('hidden');
-    var thx = new ThanksCard({
-      srcNode: "#container",
-      listOfBGs :[
-        {
-          name: 'test1',
-          node: Y.one('#bg_img2'),
-          coord: [{x:525, y:250, width:595, height: 600, angle:0.261},
-          {x:1251, y:213, width:595, height: 525, angle:0.174}]
-        },
-        {
-          name: 'test2',
-          node: Y.one('#bg_img1'),
-          coord: [{x:210, y:305, width:320, height: 310, angle:0},
-          {x:1185, y:448, width:470, height: 475, angle:0}]
-        }]
-    });
-
-
-    Y.log('Thx card inited\nset list of imgs...');
-    var photoClasses = ['.primPhoto', '.secPhoto'];
-    thx.set('listOfImgs', photoClasses);
-    thx.render();
-    Y.one('body').on('key', function (e) {
-      thx.nextFrame();
-    }, 'down:enter');
-
-    Y.one('body').on('key', function (e) {
-      e.preventDefault();
-      thx.nextCurrentFrameImg();
-    }, 'down:tab');
-
-    Y.one('body').on('key', function (e) { 
-      thx.nextBG();
-      e.stopPropagation();
-    }, 'down:+shift');
-    Y.one('body').on('mousewheel', function (e) { 
-      Y.log('event mousewheel'); 
-      thx.selectedFrameZoomHandler(e);
-    });
-
-    Y.one('#container').on('click', thx.onClick, thx)
-
-    Y.one('body').focus();
-
-
-  });
-});
+}, "1.0.0", {requires:["base-base", "widget", "substitute", "array-extras" ]});
+// END WRAPPER
