@@ -18,7 +18,7 @@ YUI.add("thxcard-howto", function(Y) {
         duration: 1, // seconds
         easing: 'ease-out', // CSS syntax
         height: 0,
-        top: '100px',
+        //top: '100px',
         opacity: {
           delay: 0.0,
           duration: 1,
