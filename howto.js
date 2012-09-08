@@ -50,8 +50,8 @@ YUI.add("thxcard-howto", function(Y) {
     },
 
     renderUI: function () {
-      this.background = Y.Node.create('<div class="background">Le fond change en cliquant dessus. Clique s\'il te plaît.</div>');
-      this.frame = Y.Node.create('<div class="frame">Les photos contenues dans les cadres changent aussi lors d\'un click.  Essayez...</div>');
+      this.background = Y.Node.create('<div class="background">Le fond change en cliquant dessus. Clique s\'il te plaît.<br/>請試著在方框點擊來換背景圖</div>');
+      this.frame = Y.Node.create('<div class="frame">Les photos contenues dans les cadres changent aussi lors d\'un click.  Essayez...<br/>請試著在方框裡點擊來換下一張照片</div>');
       this.background.append(this.frame);
       this.get('contentBox').append(this.background); 
     },
