@@ -18,20 +18,18 @@ YUI.add("thxcard-howto", function(Y) {
         duration: 1, // seconds
         easing: 'ease-out', // CSS syntax
         height: 0,
-        top: '100px',
-
+        //top: '100px',
         opacity: {
           delay: 0.0,
           duration: 1,
           value: 0
         },
-
         color: {
           delay: 0.0,
           duration: 1.0,
           value: 'rgba(0,0,0,0)'
         }
-      }, function() {
+      }, function () {
         that.hide();
         that.destroy();
         callback();
@@ -45,7 +43,10 @@ YUI.add("thxcard-howto", function(Y) {
     initializer: function () {
 
       this.after('clickedChange', this.checkHowtoEnd, this);
-      this.publish('finished');
+      this.publish('finished', {
+        emitFacade: true,
+        broadcast: 2
+      });
     },
 
     renderUI: function () {

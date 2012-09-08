@@ -40,19 +40,10 @@ YUI({
 
 
     thxHowto.render();
-    /*
-    thxHowto.on('finished', function () {
-    Y.log('howto finished'); 
-    thxHowto.finish();
+    Y.on('thxcard-howto:finished', function () {
+      thxHowto.finish(function () {
+        thx.render();
+      });     
     });
-    */
-    //thxHowto.on('removingTransitionEnded', function () {
-      thxHowto.on('finished', function () {
-        thxHowto.finish(function () {
-          thx.render();
-          //add interactivity to the thx card with event handling
-          //Y.one('#container').on('click', thx.onClick, thx);
-        });     
-      });
   });
 });
