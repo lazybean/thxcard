@@ -27,7 +27,7 @@ YUI.add("thxcard", function(Y) {
   * used as an event prefix, to generate class names etc. (set to the 
   * class name in camel case). 
   */
-  ThanksCard.NAME = "thanksCard";
+  ThanksCard.NAME = "ThanksCard";
 
   /*
   * The attribute configuration for the widget. This defines the core user facing state of the widget
