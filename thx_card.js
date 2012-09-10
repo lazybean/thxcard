@@ -225,8 +225,9 @@ YUI.add("thxcard", function(Y) {
       this.after("currentBGChange", this._afterCurrentBGChange);
       this.after("currentFrameImgsChange", this._afterCurrentFrameImgsChange);
       this.after("imgsRatioChange", this._afterImgsRatioChange);
-      
+
       this.get('contentBox').on('click', this.onClick, this);
+      this.get('contentBox').on('contextmenu', this.onRightClick, this);
     },
 
     syncUI : function() {
@@ -453,11 +454,19 @@ YUI.add("thxcard", function(Y) {
 
     },
 
-    nextBG : function() {
+    nextBG : function(down) {
+      var incr = 1,
+      nextBG,
+      length = this.get('listOfBGs').length;
+      if ( down === true ) {
+        incr = -1;
+      }   
 
-      var nextBG = this.get('currentBG') + 1;
-      if (nextBG >= this.get('listOfBGs').length){
+      nextBG = this.get('currentBG') + incr;
+      if (nextBG >= length){
         nextBG = 0;
+      } else if ( nextBG < 0 ) {
+        nextBG = length - 1; 
       }
       this.set('currentBG', nextBG);
       this.set('selectedFrame', 0);
@@ -471,18 +480,24 @@ YUI.add("thxcard", function(Y) {
     *
     * It does not draw any thing. But there is a change event listener on the index, that may draw the new image
     *
-    *@method
+    * @method nextCurrentFrameImg
     *
+    * @param {boolean} reverse
     *
     */
-    nextCurrentFrameImg : function() {
+    nextCurrentFrameImg : function(reverse) {
 
       var selectedFrame = this.get('selectedFrame'),
       currentFrameImgs =  this.get('currentFrameImgs'),
       currentFrameImg = currentFrameImgs[selectedFrame],
       areFramesLoading = this.get('areFramesLoading'),
+      imgListLength = this.get('listOfImgs')[selectedFrame].length,
+      incr = 1,
       img; 
 
+      if ( reverse === true ) {
+        incr = -1;
+      } 
       //if the selected frame is still loading picture, we do not change
       if (areFramesLoading[selectedFrame] !== true) {
 
@@ -490,10 +505,12 @@ YUI.add("thxcard", function(Y) {
         if (Y.Lang.isUndefined(currentFrameImg)) {
           currentFrameImg = 1;
         } else {
-          currentFrameImg ++;
+          currentFrameImg  += incr;
         } 
-        if (currentFrameImg >= this.get('listOfImgs')[selectedFrame].length){
+        if (currentFrameImg >= imgListLength ) {
           currentFrameImg = 0;
+        } else if ( currentFrameImg < 0 ) {
+          currentFrameImg = imgListLength - 1;
         }
         img = this.get('listOfImgs')[selectedFrame][currentFrameImg];
 
@@ -626,23 +643,37 @@ YUI.add("thxcard", function(Y) {
       this.nextImageForElementAtPosition(x, y);
     },
 
+    onRightClick: function(e) {
+      e.preventDefault();
+      var container = this.get('srcNode'),
+      x = e.pageX - container.getX(),
+      y = e.pageY - container.getY();
+      this.nextImageForElementAtPosition(x, y, true);
+    },
+
     /**
-     * Change the image of the element at position x y to the next image
-     *
-     * @method nextImageForElementAtPosition
-     * @param {number} x position
-     * @param {number} y position
-     */
-    nextImageForElementAtPosition: function (x, y) {
+    * Change the image of the element at position x y to the next image
+    *
+    * @method nextImageForElementAtPosition
+    * @param {number} x position
+    * @param {number} y position
+    * @param {boolean} optionnal (default at false) reverse got to the previous image instead
+    *
+    */
+    nextImageForElementAtPosition: function (x, y, reverse) {
 
       //now what element is at position x y
       var elClick = this.getElementClicked(x,y);
+      //reverse is defaulted false
+      if (reverse !== true) {
+        reverse = false;
+      }
 
       if (elClick < 0) {
-        this.nextBG();
+        this.nextBG(reverse);
       } else {
         this.set('selectedFrame', elClick);
-        this.nextCurrentFrameImg();
+        this.nextCurrentFrameImg(reverse);
       }
     }
 
