@@ -13,7 +13,7 @@ YUI.add("thxcard-howto", function(Y) {
 
 
     finish: function (callback) {
-     var that = this;
+      var that = this;
       this.get('contentBox').transition({
         duration: 1, // seconds
         easing: 'ease-out', // CSS syntax
@@ -51,57 +51,89 @@ YUI.add("thxcard-howto", function(Y) {
 
     renderUI: function () {
       this.background = Y.Node.create('<div class="background">Le fond change en cliquant dessus. Clique s\'il te plaît.<br/>請試著在方框點擊來換背景圖</div>');
-      this.frame = Y.Node.create('<div class="frame">Les photos contenues dans les cadres changent aussi lors d\'un click.  Essayez...<br/>請試著在方框裡點擊來換下一張照片</div>');
+      this.frame = Y.Node.create('<div class="frame frame1">Les photos contenues dans les cadres changent aussi lors d\'un click.  Essayez...<br/>請試著在方框裡點擊來換下一張照片</div>');
       this.background.append(this.frame);
       this.get('contentBox').append(this.background); 
+      this.get('contentBox').append(Y.Node.create('<button id="skipHowto">Je connais</button>')); 
+      this.skipButton = new Y.Button({
+        srcNode: "#skipHowto"
+      });
+      this.skipButton.on('click', function (e) {
+        this.fire('finished');
+      },
+      this);
+      this.skipButton.render();
     },
 
     bindUI: function() {
       this.background.on('click', this.handleBackroundClick, this );
       this.frame.on('click', this.handleFrameClick, this );
-      this.after('clickedChange', this.syncUI, this);
+      this.frame.on('contextmenu', this.handleFrameRightClick, this );
 
     },
 
     syncUI: function() {
-      this.toggleClicked();   
+    },
+
+    frameSecondStep: function () {
+      this.setAsClicked('frame');
+      this.frame.set('text', 'Yoopi! Encore...');
+      this.frame.removeClass('frame1');
+      this.frame.addClass('frame2');
+    },
+    frameThirdStep: function () {
+      this.setAsClicked('frame');
+      this.frame.set('text', 'Oh non, je suis tout seul, reviens en arrière avec un click droit');
+      this.frame.removeClass('frame2');
+      this.frame.addClass('frame3');
+    },
+
+    frameFourthStep: function () {
+      this.setAsClicked('frame');
+      this.frame.set('text', 'Ouf!');
+      this.frame.removeClass('frame3');
+      this.frame.addClass('frame2');
     },
 
     handleBackroundClick: function(e) {
       e.preventDefault();
       e.stopPropagation();
-      this.setAsClicked('background');
+      if(this.get('clicked.background') ===  0) {
+         this.setAsClicked('background');
+         this.background.addClass('clicked');
+      }
     },
 
     handleFrameClick: function(e) {
       e.preventDefault();
       e.stopPropagation();
-      this.setAsClicked('frame');
+      switch (this.get('clicked.frame') ) {
+      case(0):
+        this.frameSecondStep();
+        break;
+
+      case(1):
+        this.frameThirdStep();
+        break;
+      default:
+      break;
+      }
     },
 
-    /**
-    * For the frame and backgound, add or remove the 'clicked' class depending on clicked.framed respectively clicked.background is true or not.
-    *
-    *@method toggleClicked
-    *
-    */
-    toggleClicked: function () {
-      Y.each(this.get('clicked'), function (v, k) {
-        if (v) {
-          this[k].addClass('clicked');
-        } else {
-
-          this[k].removeClass('clicked');
-        }
-      }, this);
-    },    
-
+    handleFrameRightClick: function(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      switch (this.get('clicked.frame') ) {
+      case(2):
+        this.frameFourthStep();
+        break;
+      default:
+      break;
+      }
+    },
     checkHowtoEnd: function () {
-      // (there is one that is not clicked is false ) == (all clicked)
-      var areAllClicked = ! Y.some(this.get('clicked'), function (v, k) {
-        return !v;
-      }, this);
-      if ( areAllClicked ) {
+      var completedSteps = this.get('clicked');
+      if (completedSteps.background === 1 && completedSteps.frame === 3) {
         this.fire('finished'); 
       }  
     }, 
@@ -115,23 +147,21 @@ YUI.add("thxcard-howto", function(Y) {
     *
     */
     setAsClicked: function(target) {
-      this.set('clicked.'+target, true);
+      var newClickedValue = this.get('clicked.' + target) + 1;
+      this.set('clicked.'+target, newClickedValue);
     }
-
-
 
   },{
 
     ATTRS:{
       clicked: {
         value: {
-          background:false,
-          frame: false
+          background:0,
+          frame: 0
         }
       }
-
     }
 
   });
 
-}, "1.0.0", {requires: ["base-build", "widget", "node", "event", "transition"]});
+}, "1.0.0", {requires: ["base-build", "widget", "node", "event", "transition", "button"]});

@@ -6,7 +6,7 @@ YUI({
     },
     'thxcard-howto':{ 
       fullpath: 'howto.js',
-      require: ['base-build', 'widget', 'node', 'event', 'transition']
+      require: ['base-build', 'widget', 'node', 'event', 'transition', 'button']
     }
   }
 }).use('thxcard', 'thxcard-howto', 'node',  'event', 'event-mousewheel', function(Y) {

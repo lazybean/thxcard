@@ -1,8 +1,9 @@
 .yui3-thxcard-howto {
   display: block;
   margin: auto;
-  width: 800px;
-  height: 600px;
+  width: 1000px;
+  height: 667px;
+  margin-top: 2em;
 }
 
 .yui3-thxcard-howto-content {
@@ -25,10 +26,10 @@
 }
 
 .yui3-thxcard-howto-content .background.clicked {
-background-image: linear-gradient(top left, #9191FF, rgba(186,255,230,0));
-background-image: -webkit-linear-gradient(top left, #9191FF, rgba(186,255,230,0));
-background-image: -moz-linear-gradient(top left, #9191FF, rgba(186,255,230,0));
-background-image: -o-linear-gradient(top left, #9191FF, rgba(186,255,230,0));
+  background-image: linear-gradient(top left, #9191FF, rgba(186,255,230,0));
+  background-image: -webkit-linear-gradient(top left, #9191FF, rgba(186,255,230,0));
+  background-image: -moz-linear-gradient(top left, #9191FF, rgba(186,255,230,0));
+  background-image: -o-linear-gradient(top left, #9191FF, rgba(186,255,230,0));
 }
 
 .yui3-thxcard-howto-content .frame {
@@ -45,9 +46,23 @@ background-image: -o-linear-gradient(top left, #9191FF, rgba(186,255,230,0));
   box-shadow: 2px 2px 10px #11511f; /* Opera 10.5, IE9, FF4+, Chrome 6+, iOS 5 */
 }
 
-.yui3-thxcard-howto-content .frame.clicked {
-background-image: linear-gradient(bottom right, #9191FF, rgba(186,255,230,0));
-background-image: -webkit-linear-gradient(bottom right, #9191FF, rgba(186,255,230,0));
-background-image: -moz-linear-gradient(bottom right, #9191FF, rgba(186,255,230,0));
-background-image: -o-linear-gradient(bottom right, #9191FF, rgba(186,255,230,0));
+.yui3-thxcard-howto-content .frame.frame1 {
+  background-image: url('howto/lisa.jpg');
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+}
+
+.yui3-thxcard-howto-content .frame.frame2 {
+  background-image: url('howto/lisanlittlebean.jpg');
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+}
+
+.yui3-thxcard-howto-content .frame.frame3 {
+  background-image: url('howto/littlebean.jpg');
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
 }
