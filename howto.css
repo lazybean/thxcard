@@ -31,7 +31,7 @@ background-image: -moz-linear-gradient(top left, #9191FF, rgba(186,255,230,0));
 background-image: -o-linear-gradient(top left, #9191FF, rgba(186,255,230,0));
 }
 
-.yui3-thxcard-howto-content .frame:first-child {
+.yui3-thxcard-howto-content .frame {
   width: 50%;
   height: 40%;
   position: relative;
