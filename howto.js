@@ -50,11 +50,11 @@ YUI.add("thxcard-howto", function(Y) {
     },
 
     renderUI: function () {
-      this.background = Y.Node.create('<div class="background">Le fond change en cliquant dessus. Clique s\'il te plaît.<br/>請試著在方框點擊來換背景圖</div>');
-      this.frame = Y.Node.create('<div class="frame frame1">Les photos contenues dans les cadres changent aussi lors d\'un click.  Essayez...<br/>請試著在方框裡點擊來換下一張照片</div>');
+      this.background = Y.Node.create('<div class="background"><strong>TUTORIAL:</strong> Le fond change en cliquant dessus. Clique s\'il vous plaît. Essayez...<br /><a><strong>說明：</strong>請在大方框內點擊以交換背景圖片</a></div>');
+      this.frame = Y.Node.create('<div class="frame frame1">Les photos contenues dans les cadres changent aussi lors d\'un click.<br/><a>請在小方框內點擊來換下一張照片</a></div>');
       this.background.append(this.frame);
       this.get('contentBox').append(this.background); 
-      this.get('contentBox').append(Y.Node.create('<button id="skipHowto">Je connais</button>')); 
+      this.get('contentBox').append(Y.Node.create('<button id="skipHowto">Je connais | 跳過說明</button>')); 
       this.skipButton = new Y.Button({
         srcNode: "#skipHowto"
       });
@@ -77,20 +77,20 @@ YUI.add("thxcard-howto", function(Y) {
 
     frameSecondStep: function () {
       this.setAsClicked('frame');
-      this.frame.set('text', 'Yoopi! Encore...');
+      this.frame.set('text', 'Yoopi! Encore... 再試一次');
       this.frame.removeClass('frame1');
       this.frame.addClass('frame2');
     },
     frameThirdStep: function () {
       this.setAsClicked('frame');
-      this.frame.set('text', 'Oh non, je suis tout seul, reviens en arrière avec un click droit');
+      this.frame.set('innerHTML', 'Oh non, je suis tout seul, reviens en arrière avec un click droit. <br /><a>點擊右鍵返回前一張照片</a>');
       this.frame.removeClass('frame2');
       this.frame.addClass('frame3');
     },
 
     frameFourthStep: function () {
       this.setAsClicked('frame');
-      this.frame.set('text', 'Ouf!');
+      this.frame.set('text', 'Ouf! 恭喜你完成一半練習!');
       this.frame.removeClass('frame3');
       this.frame.addClass('frame2');
     },
