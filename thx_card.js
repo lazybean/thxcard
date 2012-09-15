@@ -53,7 +53,10 @@ YUI.add("thxcard", function(Y) {
     * @property
     */
     areFramesLoading : {
-      value: []
+      value: [],
+      setter: function(val){
+        return val;
+      }
     },
 
     //list of images ratio. default is 1
@@ -298,9 +301,9 @@ YUI.add("thxcard", function(Y) {
     *
     */
     setListOfImg : function (elClass, argName) {
-      var imgs = Y.all(elClass);
+      var imgs = Y.all(elClass),
+      listOfImgs = [];
       Y.log('Setting images for ' + argName);
-      var listOfImgs = [];
       imgs.each(function (item) {
         this.push({
           node: item, 
@@ -475,7 +478,7 @@ YUI.add("thxcard", function(Y) {
     },
 
     /**
-    * Incremante the selected frame image index.
+    * Incremant the selected frame image index.
     * If the index become greater than the amount of image, we set it back to 0
     *
     * It does not draw any thing. But there is a change event listener on the index, that may draw the new image
@@ -491,47 +494,68 @@ YUI.add("thxcard", function(Y) {
       currentFrameImgs =  this.get('currentFrameImgs'),
       currentFrameImg = currentFrameImgs[selectedFrame],
       areFramesLoading = this.get('areFramesLoading'),
-      imgListLength = this.get('listOfImgs')[selectedFrame].length,
+      imgList = this.get('listOfImgs')[selectedFrame],
+      imgListLength = imgList.length, 
       incr = 1,
+      imgNode,
       img; 
 
       if ( reverse === true ) {
-        incr = -1;
+        incr = -1; //previous image
       } 
+
+      //we increment the currentFrameImg index
+      if (Y.Lang.isUndefined(currentFrameImg)) {
+        currentFrameImg = 1;
+      } else {
+        currentFrameImg  += incr;
+      } 
+      if (currentFrameImg >= imgListLength ) {
+        currentFrameImg = 0;
+      } else if ( currentFrameImg < 0 ) {
+        currentFrameImg = imgListLength - 1;
+      }
+
       //if the selected frame is still loading picture, we do not change
-      if (areFramesLoading[selectedFrame] !== true) {
+      if (imgList[currentFrameImg].loading !== true) {
+        //if (areFramesLoading[selectedFrame] !== true) {
 
-        //we increment the currentFrameImg index
-        if (Y.Lang.isUndefined(currentFrameImg)) {
-          currentFrameImg = 1;
-        } else {
-          currentFrameImg  += incr;
-        } 
-        if (currentFrameImg >= imgListLength ) {
-          currentFrameImg = 0;
-        } else if ( currentFrameImg < 0 ) {
-          currentFrameImg = imgListLength - 1;
-        }
-        img = this.get('listOfImgs')[selectedFrame][currentFrameImg];
+          img = this.get('listOfImgs')[selectedFrame][currentFrameImg];
 
-        //we check if the next image to display in the frame is loaded
-        //if the widht of the image is 0, we consider the next image as not loaded
-        if ( img.node.get('width') > 0) {
-          currentFrameImgs[selectedFrame] = currentFrameImg;
-          this.set('currentFrameImgs', currentFrameImgs);
-          Y.log('New Img for frame ' + selectedFrame +' is ' + currentFrameImg);
-        } else {
-
-          var areFramesLoading = this.get('areFramesLoading'),
-          imgNode = img.node;
-          areFramesLoading[selectedFrame] = true;
-          //load the image, set the change when image is loaded
-          imgNode.setAttribute('src', imgNode.getAttribute('fakesrc'));
-          imgNode.on('load', this.setNextFrameOnImageLoaded, this, selectedFrame,currentFrameImg);
-
-        }
+          //we check if the next image to display in the frame is loaded
+          //if the widht of the image is 0, we consider the next image as not loaded
+          if ( img.node.get('width') > 0) {
+            currentFrameImgs[selectedFrame] = currentFrameImg;
+            this.set('currentFrameImgs', currentFrameImgs);
+            Y.log('New Img for frame ' + selectedFrame +' is ' + currentFrameImg);
+          } else {
+            this.loadPhoto(imgList, selectedFrame, currentFrameImg, true);
+          }
       }
     },
+
+    /**
+    * load the photo with index,
+    * @method loadPhoto
+    *
+    * @imageList {Array} array of photo
+    * @param {number} index
+    * @param {boolean} displayWhenLoaded
+    */
+    loadPhoto: function (imgList, selectedFrame, currentFrameImg, displayWhenLoaded ) {
+
+      Y.log('Next Img for frame ' + selectedFrame +' has to be loaded: ' + currentFrameImg);
+      var img = imgList[currentFrameImg],
+      imgNode = img.node;
+      imgList[currentFrameImg].loading = true;
+      imgList[currentFrameImg].displayWhenLoaded = displayWhenLoaded;
+      //areFramesLoading[selectedFrame] = true;
+      //load the image, set the change when image is loaded
+      imgNode.setAttribute('src', imgNode.getAttribute('fakesrc'));
+      imgNode.on('load', this.setNextFrameOnImageLoaded, this, selectedFrame,currentFrameImg);
+
+    },
+
 
     /**
     * increment the image index on the selected frame. Put the loading attribute for this frame at false
@@ -542,11 +566,23 @@ YUI.add("thxcard", function(Y) {
     setNextFrameOnImageLoaded: function(e, frame, newIndex) {
 
       var areFramesLoading = this.get('areFramesLoading'),
-      currentFrameImgs =  this.get('currentFrameImgs');
-      areFramesLoading[frame] = false;
-      currentFrameImgs[frame] = newIndex;
-      this.set('areFramesLoading', areFramesLoading);
-      this.set('currentFrameImgs', currentFrameImgs);
+      imgList = this.get('listOfImgs')[frame],
+      currentFrameImgs =  this.get('currentFrameImgs'),
+      nextIndex;
+
+      imgList[newIndex].loading = false;
+
+      if (imgList[newIndex].displayWhenLoaded === true ) {
+        currentFrameImgs[frame] = newIndex;
+        imgList[newIndex].displayWhenLoaded = false; 
+        this.set('currentFrameImgs', currentFrameImgs);
+      }
+
+      //load next photo
+      nextIndex = newIndex + 1;
+      if (nextIndex < imgList.length) {
+        this.loadPhoto(imgList, frame, nextIndex, false);
+      }
 
     },
     /**
@@ -559,9 +595,9 @@ YUI.add("thxcard", function(Y) {
     *switch between the frames 0 and 1
     */
     nextFrame : function() {
-      var prev = this.get('selectedFrame');
-      var currentBG = this.get('currentBG') ;
-      var numberOfFrameInBG = this.get('listOfBGs')[currentBG].coord.length;
+      var prev = this.get('selectedFrame'),
+      currentBG = this.get('currentBG'),
+      numberOfFrameInBG = this.get('listOfBGs')[currentBG].coord.length;
       this.set('selectedFrame', ((prev + 1 < numberOfFrameInBG )?prev+1:0)); 
       Y.log('Next Frame: ' + this.get('selectedFrame'));
     },
